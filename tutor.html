@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tutor Profile — ABC Tutoring</title>
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/posthog-init.js"></script>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="brand" href="index.html">ABC Tutoring</a>
+  <div class="links">
+    <a href="tutors.html">Find a tutor</a>
+  </div>
+</nav>
+
+<main id="main-content">
+  <!-- Populated by JS -->
+</main>
+
+<script src="js/data.js"></script>
+<script>
+  const params = new URLSearchParams(window.location.search);
+  const tutorId = params.get("id");
+  const tutor = getTutorById(tutorId);
+  const main = document.getElementById("main-content");
+
+  if (!tutor) {
+    main.innerHTML = `<p>Tutor not found. <a href="tutors.html">Back to tutor list</a></p>`;
+  } else {
+    renderProfile();
+  }
+
+  function renderProfile() {
+    main.innerHTML = `
+      <div class="profile-header">
+        <img src="${tutor.photo}" alt="${tutor.name}">
+        <div>
+          <h1>${tutor.name}</h1>
+          <div class="profile-facts">${tutor.grades} &middot; $${tutor.rate}/hr</div>
+        </div>
+      </div>
+      <p class="profile-facts"><strong>Subjects:</strong> ${tutor.subjects.join(", ")}</p>
+
+      <section class="slots-section">
+        <h2>Pick a time</h2>
+        <div class="slot-list" id="slot-list"></div>
+      </section>
+
+      <section class="booking-form hidden" id="booking-form-section">
+        <h2>Booking details</h2>
+        <div class="selected-slot-note" id="selected-slot-note"></div>
+        <form id="booking-form">
+          <label for="parentName">Parent name</label>
+          <input type="text" id="parentName" required>
+
+          <label for="parentEmail">Parent email</label>
+          <input type="email" id="parentEmail" required>
+
+          <label for="studentFirstName">Student's first name</label>
+          <input type="text" id="studentFirstName" required>
+
+          <label for="studentGrade">Student's grade</label>
+          <select id="studentGrade" required>
+            <option value="">Select grade</option>
+            ${["K","1","2","3","4","5","6","7","8","9","10"].map(g => `<option value="${g}">${g}</option>`).join("")}
+          </select>
+
+          <label for="subject">Subject</label>
+          <select id="subject" required>
+            ${tutor.subjects.map(s => `<option value="${s}">${s}</option>`).join("")}
+          </select>
+
+          <button type="submit" class="cta-button" style="margin-top:18px;">Confirm booking</button>
+        </form>
+      </section>
+    `;
+
+    renderSlots();
+
+    document.getElementById("booking-form").addEventListener("submit", handleBookingSubmit);
+
+    // Track that this tutor's profile was viewed
+    if (window.posthog) {
+      posthog.capture("tutor_profile_viewed", {
+        tutor_id: tutor.id,
+        tutor_name: tutor.name
+      });
+    }
+  }
+
+  let selectedSlot = null;
+
+  function renderSlots() {
+    const slotList = document.getElementById("slot-list");
+    slotList.innerHTML = "";
+    tutor.slots.forEach(slot => {
+      const btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "slot-button" + (slot.booked ? " taken" : "");
+      btn.textContent = `${slot.day} ${slot.time}`;
+      btn.disabled = slot.booked;
+      if (!slot.booked) {
+        btn.addEventListener("click", () => selectSlot(slot));
+      }
+      slotList.appendChild(btn);
+    });
+  }
+
+  function selectSlot(slot) {
+    selectedSlot = slot;
+    document.getElementById("booking-form-section").classList.remove("hidden");
+    document.getElementById("selected-slot-note").textContent =
+      `Booking ${tutor.name} — ${slot.day} at ${slot.time}`;
+    document.getElementById("booking-form-section").scrollIntoView({ behavior: "smooth" });
+
+    if (window.posthog) {
+      posthog.capture("booking_started", {
+        tutor_id: tutor.id,
+        tutor_name: tutor.name,
+        day: slot.day,
+        time: slot.time
+      });
+    }
+  }
+
+  function handleBookingSubmit(e) {
+    e.preventDefault();
+    if (!selectedSlot) return;
+
+    const booking = {
+      tutorId: tutor.id,
+      tutorName: tutor.name,
+      day: selectedSlot.day,
+      time: selectedSlot.time,
+      parentName: document.getElementById("parentName").value,
+      parentEmail: document.getElementById("parentEmail").value,
+      studentFirstName: document.getElementById("studentFirstName").value,
+      studentGrade: document.getElementById("studentGrade").value,
+      subject: document.getElementById("subject").value,
+      bookedAt: new Date().toISOString()
+    };
+
+    saveBooking(booking);
+    markSlotBooked(tutor.id, selectedSlot.day, selectedSlot.time);
+
+    if (window.posthog) {
+      posthog.capture("booking_completed", {
+        tutor_id: tutor.id,
+        tutor_name: tutor.name,
+        subject: booking.subject,
+        student_grade: booking.studentGrade
+      });
+    }
+
+    // Store the last booking so confirmation.html can show it
+    sessionStorage.setItem("last_booking", JSON.stringify(booking));
+    window.location.href = "confirmation.html";
+  }
+</script>
+
+</body>
+</html>

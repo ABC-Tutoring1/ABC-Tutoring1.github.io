@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bookings — ABC Tutoring</title>
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/posthog-init.js"></script>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="brand" href="index.html">ABC Tutoring</a>
+  <div class="links">
+    <a href="tutors.html">Find a tutor</a>
+  </div>
+</nav>
+
+<main>
+  <h1>Bookings</h1>
+  <p>A simple list of sessions booked through the site.</p>
+  <div id="bookings-table" style="margin-top:18px;"></div>
+</main>
+
+<script src="js/data.js"></script>
+<script>
+  const bookings = loadBookings();
+  const container = document.getElementById("bookings-table");
+
+  if (bookings.length === 0) {
+    container.innerHTML = `<p class="empty-note">No bookings yet.</p>`;
+  } else {
+    const rows = bookings.map(b => `
+      <tr>
+        <td>${b.day} ${b.time}</td>
+        <td>${b.tutorName}</td>
+        <td>${b.studentFirstName} (Gr. ${b.studentGrade})</td>
+        <td>${b.subject}</td>
+        <td>${b.parentName}<br>${b.parentEmail}</td>
+      </tr>
+    `).join("");
+
+    container.innerHTML = `
+      <table>
+        <thead>
+          <tr><th>When</th><th>Tutor</th><th>Student</th><th>Subject</th><th>Parent</th></tr>
+        </thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+  }
+</script>
+
+</body>
+</html>

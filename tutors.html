@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Find a Tutor — ABC Tutoring</title>
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/posthog-init.js"></script>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="brand" href="index.html">ABC Tutoring</a>
+  <div class="links">
+    <a href="tutors.html">Find a tutor</a>
+  </div>
+</nav>
+
+<main>
+  <h1>Meet our tutors</h1>
+  <p>Six tutors covering elementary math through Algebra II, science, and elementary reading.</p>
+
+  <div id="tutor-list" style="margin-top: 20px;"></div>
+</main>
+
+<script src="js/data.js"></script>
+<script>
+  const tutors = loadTutors();
+  const list = document.getElementById("tutor-list");
+
+  tutors.forEach(tutor => {
+    const row = document.createElement("a");
+    row.className = "tutor-row";
+    row.href = `tutor.html?id=${tutor.id}`;
+    row.innerHTML = `
+      <img src="${tutor.photo}" alt="${tutor.name}">
+      <div class="info">
+        <h3>${tutor.name}</h3>
+        <div class="meta">${tutor.subjects.join(", ")} &middot; ${tutor.grades}</div>
+      </div>
+      <div class="rate">$${tutor.rate}/hr</div>
+    `;
+    list.appendChild(row);
+  });
+</script>
+
+</body>
+</html>

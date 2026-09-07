@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Booking Confirmed — ABC Tutoring</title>
+<link rel="stylesheet" href="css/styles.css">
+<script src="js/posthog-init.js"></script>
+</head>
+<body>
+
+<nav class="site-nav">
+  <a class="brand" href="index.html">ABC Tutoring</a>
+  <div class="links">
+    <a href="tutors.html">Find a tutor</a>
+  </div>
+</nav>
+
+<main id="main-content"></main>
+
+<script>
+  const raw = sessionStorage.getItem("last_booking");
+  const main = document.getElementById("main-content");
+
+  if (!raw) {
+    main.innerHTML = `<h1>No recent booking found</h1><p><a href="tutors.html">Browse tutors</a> to make a booking.</p>`;
+  } else {
+    const b = JSON.parse(raw);
+    main.innerHTML = `
+      <h1>You're booked!</h1>
+      <div class="confirmation-box">
+        <p><strong>${b.studentFirstName}</strong> (Grade ${b.studentGrade}) is booked with
+        <strong>${b.tutorName}</strong> for <strong>${b.subject}</strong>.</p>
+        <p><strong>${b.day} at ${b.time}</strong></p>
+        <p>We'll be in touch at ${b.parentEmail} if anything changes. Feel free to screenshot this page for your records.</p>
+      </div>
+      <p style="margin-top:20px;"><a href="tutors.html">Book another session</a></p>
+    `;
+  }
+</script>
+
+</body>
+</html>
